@@ -51,20 +51,6 @@ npm start
 5. **Abra no navegador:**
    - O app abrirá automaticamente em `http://localhost:3000`
 
-## 📁 Estrutura do Projeto
-
-```
-ja-joguei/
-├── public/
-│   └── index.html
-├── src/
-│   ├── App.js
-│   ├── index.js
-│   └── index.css
-├── package.json
-└── README.md
-```
-
 ## 🎯 Como Usar
 
 1. **Login:**
@@ -83,30 +69,3 @@ ja-joguei/
 
 4. **Acompanhar Estatísticas:**
    - Veja total de jogos, completados, média de notas e horas jogadas
-
-## 🔮 Próximos Passos (Opcional)
-
-Para transformar em app real com dados na nuvem:
-
-1. Configure um projeto no [Firebase Console](https://console.firebase.google.com)
-2. Ative Authentication e Firestore
-3. Integre as credenciais no código
-4. Substitua localStorage por Firestore
-
-## 📝 Notas
-
-- Os dados ficam salvos no navegador (localStorage)
-- Cada usuário tem sua própria biblioteca local
-- Limpar o cache do navegador apagará os dados
-
-## 🤝 Contribuindo
-
-Sinta-se livre para fazer fork, modificar e melhorar o projeto!
-
-## 📄 Licença
-
-Este projeto é livre para uso pessoal e educacional.
-
----
-
-Feito com ❤️ para gamers organizados! 🎮✨

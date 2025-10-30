@@ -20,17 +20,27 @@ const FilterBar = ({ searchTerm, onSearchChange, filterStatus, onStatusChange, f
           value={filterStatus}
           onChange={(e) => onStatusChange(e.target.value)}
           className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none"
+          style={{ colorScheme: 'dark' }}
         >
-          <option value="all">Todos Status</option>
-          {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          <option value="all" className="bg-gray-800 text-white">Todos Status</option>
+          {STATUSES.map(s => (
+            <option key={s.value} value={s.value} className="bg-gray-800 text-white">
+              {s.label}
+            </option>
+          ))}
         </select>
         <select
           value={filterPlatform}
           onChange={(e) => onPlatformChange(e.target.value)}
           className="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none"
+          style={{ colorScheme: 'dark' }}
         >
-          <option value="all">Todas Plataformas</option>
-          {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
+          <option value="all" className="bg-gray-800 text-white">Todas Plataformas</option>
+          {PLATFORMS.map(p => (
+            <option key={p} value={p} className="bg-gray-800 text-white">
+              {p}
+            </option>
+          ))}
         </select>
       </div>
     </div>

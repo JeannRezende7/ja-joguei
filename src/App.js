@@ -6,6 +6,7 @@ import StatsCards from './components/StatsCards';
 import FilterBar from './components/FilterBar';
 import GameCard from './components/GameCard';
 import GameModal from './components/GameModal';
+import ExportModal from './components/ExportModal';
 import { useGameSearch } from './hooks/useGameSearch';
 import { detectPlatform, mapGenresToTags, calculateStats, filterGames } from './utils/gameUtils';
 
@@ -13,6 +14,7 @@ const JaJoguei = () => {
   const [user, setUser] = useState(null);
   const [games, setGames] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -172,7 +174,11 @@ const JaJoguei = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Header user={user} onLogout={handleLogout} />
+      <Header 
+        user={user} 
+        onLogout={handleLogout}
+        onExport={() => setShowExportModal(true)}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <StatsCards stats={stats} />
@@ -188,7 +194,7 @@ const JaJoguei = () => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="mb-6 bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition flex items-center gap-2 shadow-lg"
+          className="mb-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg"
         >
           <Plus className="w-5 h-5" /> Adicionar Jogo
         </button>
@@ -233,6 +239,19 @@ const JaJoguei = () => {
             setEditingGame(null);
             resetForm();
           }}
+        />
+      )}
+
+      {showExportModal && (
+        <ExportModal
+          games={games}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
+      {showExportModal && (
+        <ExportModal
+          games={games}
+          onClose={() => setShowExportModal(false)}
         />
       )}
     </div>
