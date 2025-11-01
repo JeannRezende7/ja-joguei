@@ -197,6 +197,12 @@ const JaJoguei = () => {
 
   const filteredGamesList = filterGames(games, searchTerm, filterStatus, filterPlatform);
   const stats = calculateStats(games);
+  
+  const playingNow = games.filter(g => g.status === 'playing').slice(0, 3);
+  const topGames = [...games]
+    .filter(g => g.hoursPlayed)
+    .sort((a, b) => parseInt(b.hoursPlayed || 0) - parseInt(a.hoursPlayed || 0))
+    .slice(0, 10);
 
   if (authLoading) {
     return (
@@ -218,50 +224,150 @@ const JaJoguei = () => {
         onExport={() => setShowExportModal(true)}
       />
 
-      <div className="container mx-auto px-4 py-8">
-        <StatsCards stats={stats} />
+      <div className="container mx-auto px-4 py-8 space-y-12">
+        {/* Estatísticas principais */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+            📈 Suas Estatísticas
+          </h2>
+          <StatsCards stats={stats} games={games} />
+        </section>
 
-        <FilterBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterStatus={filterStatus}
-          onStatusChange={setFilterStatus}
-          filterPlatform={filterPlatform}
-          onPlatformChange={setFilterPlatform}
-        />
+        {/* Adicionar Jogo */}
+        <section>
+          <button
+            onClick={() => setShowAddModal(true)}
+            disabled={loading}
+            className="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 text-lg"
+          >
+            <Plus className="w-6 h-6" /> {loading ? 'Aguarde...' : 'Adicionar Novo Jogo'}
+          </button>
+        </section>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          disabled={loading}
-          className="mb-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg disabled:opacity-50"
-        >
-          <Plus className="w-5 h-5" /> {loading ? 'Aguarde...' : 'Adicionar Jogo'}
-        </button>
-
-        {loading && !showAddModal && !editingGame ? (
-          <div className="text-center py-16">
-            <div className="text-white text-xl">Carregando jogos...</div>
-          </div>
-        ) : filteredGamesList.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-400 text-xl">
-              {games.length === 0 
-                ? 'Nenhum jogo adicionado ainda. Comece agora!' 
-                : 'Nenhum jogo encontrado com os filtros aplicados.'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGamesList.map(game => (
-              <GameCard
-                key={game.id}
-                game={game}
-                onEdit={startEdit}
-                onDelete={handleDeleteGame}
-              />
-            ))}
-          </div>
+        {/* Jogando Agora */}
+        {playingNow.length > 0 && (
+          <section>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+              🔥 Jogando Agora
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {playingNow.map(game => (
+                <div
+                  key={game.id}
+                  className="group relative bg-white bg-opacity-10 backdrop-blur-md rounded-2xl overflow-hidden border border-white border-opacity-20 hover:border-purple-500 transition-all hover:scale-105 cursor-pointer"
+                  onClick={() => startEdit(game)}
+                >
+                  {game.coverImage ? (
+                    <div className="w-full h-80 overflow-hidden bg-slate-800">
+                      <img 
+                        src={game.coverImage} 
+                        alt={game.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                        onError={(e) => e.target.style.display = 'none'}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-80 bg-slate-800 flex items-center justify-center text-6xl">
+                      🎮
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-2xl font-bold mb-2">{game.name}</h3>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="bg-blue-500 px-3 py-1 rounded">Jogando</span>
+                      <span>{game.platform}</span>
+                      {game.hoursPlayed && <span>⏱ {game.hoursPlayed}h</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
+
+        {/* Top 10 Mais Jogados */}
+        {topGames.length > 0 && (
+          <section>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+              ⭐ Top 10 Mais Jogados
+            </h2>
+            <div className="relative">
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+                {topGames.map((game, index) => (
+                  <div
+                    key={game.id}
+                    className="flex-shrink-0 w-48 group cursor-pointer"
+                    onClick={() => startEdit(game)}
+                  >
+                    <div className="relative">
+                      {game.coverImage ? (
+                        <img 
+                          src={game.coverImage} 
+                          alt={game.name}
+                          className="w-full h-72 object-cover rounded-lg group-hover:scale-105 transition"
+                          onError={(e) => e.target.src = ''}
+                        />
+                      ) : (
+                        <div className="w-full h-72 bg-slate-800 rounded-lg flex items-center justify-center text-5xl">
+                          🎮
+                        </div>
+                      )}
+                      <div className="absolute top-2 left-2 bg-yellow-500 text-black font-bold w-8 h-8 rounded-full flex items-center justify-center text-lg">
+                        {index + 1}
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <h4 className="text-white font-semibold truncate">{game.name}</h4>
+                      <p className="text-purple-300 text-sm">{game.hoursPlayed}h jogadas</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Filtros e Todos os Jogos */}
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+            📚 Todos os Jogos ({filteredGamesList.length})
+          </h2>
+          
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterStatus={filterStatus}
+            onStatusChange={setFilterStatus}
+            filterPlatform={filterPlatform}
+            onPlatformChange={setFilterPlatform}
+          />
+
+          {loading && !showAddModal && !editingGame ? (
+            <div className="text-center py-16">
+              <div className="text-white text-xl">Carregando jogos...</div>
+            </div>
+          ) : filteredGamesList.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-gray-400 text-xl">
+                {games.length === 0 
+                  ? 'Nenhum jogo adicionado ainda. Comece agora!' 
+                  : 'Nenhum jogo encontrado com os filtros aplicados.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+              {filteredGamesList.map(game => (
+                <GameCard
+                  key={game.id}
+                  game={game}
+                  onEdit={startEdit}
+                  onDelete={handleDeleteGame}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       {(showAddModal || editingGame) && (

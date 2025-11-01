@@ -2,13 +2,17 @@ import React from 'react';
 import { Star, Calendar, Edit2, Trash2 } from 'lucide-react';
 import { STATUSES } from '../data/constants';
 
-const GameCard = ({ game, onEdit, onDelete }) => {
+const GameCard = ({ game, onEdit, onDelete, themeData }) => {
   const statusInfo = STATUSES.find(s => s.value === game.status);
 
   return (
-    <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-20 hover:border-purple-500 transition group">
+    <div 
+      className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-20 transition group"
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = themeData?.primary}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}
+    >
       {game.coverImage && (
-        <div className="w-full h-48 overflow-hidden bg-slate-800">
+        <div className="w-full h-56 overflow-hidden bg-slate-800 relative">
           <img 
             src={game.coverImage} 
             alt={game.name}
@@ -17,35 +21,46 @@ const GameCard = ({ game, onEdit, onDelete }) => {
               e.target.style.display = 'none';
             }}
           />
-        </div>
-      )}
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-3">
-          <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition break-words pr-2">
-            {game.name}
-          </h3>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
-              onClick={() => onEdit(game)} 
-              className="text-blue-400 hover:text-blue-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(game);
+              }} 
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg transition"
             >
               <Edit2 className="w-4 h-4" />
             </button>
             <button 
-              onClick={() => onDelete(game.id)} 
-              className="text-red-400 hover:text-red-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(game.id);
+              }} 
+              className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg shadow-lg transition"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
+      )}
+      <div className="p-4">
+        <div className="mb-3">
+          <h3 
+            className="text-lg font-bold text-white transition break-words mb-1 line-clamp-2"
+            style={{ color: 'white' }}
+            onMouseEnter={(e) => e.target.style.color = themeData?.secondary}
+            onMouseLeave={(e) => e.target.style.color = 'white'}
+          >
+            {game.name}
+          </h3>
+        </div>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-gray-300 text-sm flex-wrap">
-            <span className={`${statusInfo.color} px-2 py-1 rounded text-white text-xs`}>
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            <span className={`${statusInfo.color} px-2 py-1 rounded text-white text-xs font-semibold`}>
               {statusInfo.label}
             </span>
-            <span className="bg-gray-700 px-2 py-1 rounded text-xs">{game.platform}</span>
+            <span className="bg-gray-700 px-2 py-1 rounded text-xs text-white">{game.platform}</span>
           </div>
           
           <div className="flex items-center gap-1 text-yellow-400">
@@ -55,32 +70,39 @@ const GameCard = ({ game, onEdit, onDelete }) => {
             <span className="text-white ml-2 text-sm">{game.rating}/5</span>
           </div>
           
-          {game.hoursPlayed && (
-            <div className="text-gray-300 text-sm flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {game.hoursPlayed}h jogadas
-            </div>
-          )}
-          
-          {game.dateFinished && (
-            <div className="text-gray-300 text-sm">
-              Finalizado: {new Date(game.dateFinished).toLocaleDateString('pt-BR')}
-            </div>
-          )}
+          <div className="flex items-center justify-between text-gray-300 text-xs">
+            {game.hoursPlayed && (
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {game.hoursPlayed}h
+              </div>
+            )}
+            
+            {game.dateFinished && (
+              <div>
+                {new Date(game.dateFinished).toLocaleDateString('pt-BR', { 
+                  month: 'short', 
+                  year: 'numeric' 
+                })}
+              </div>
+            )}
+          </div>
         </div>
         
         {game.tags && game.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {game.tags.map(tag => (
-              <span key={tag} className="bg-purple-600 bg-opacity-50 text-purple-200 px-2 py-1 rounded text-xs">
+          <div className="flex flex-wrap gap-1 mb-2">
+            {game.tags.slice(0, 3).map(tag => (
+              <span 
+                key={tag} 
+                className="px-2 py-0.5 rounded text-xs text-white"
+                style={{ 
+                  background: `${themeData?.primary}80` 
+                }}
+              >
                 {tag}
               </span>
             ))}
           </div>
-        )}
-        
-        {game.notes && (
-          <p className="text-gray-400 text-sm italic line-clamp-2">"{game.notes}"</p>
         )}
       </div>
     </div>
