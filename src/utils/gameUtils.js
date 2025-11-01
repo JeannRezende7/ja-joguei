@@ -17,7 +17,7 @@ export const calculateStats = (games) => {
     avgRating: games.length > 0 
       ? (games.reduce((acc, g) => acc + g.rating, 0) / games.length).toFixed(1) 
       : 0,
-    totalHours: games.reduce((acc, g) => acc + (parseInt(g.hoursPlayed) || 0), 0)
+    platinados: games.filter(g => g.platinado).length
   };
 };
 

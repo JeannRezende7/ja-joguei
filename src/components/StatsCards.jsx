@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Gamepad2 } from 'lucide-react';
+import { Star, Gamepad2, Trophy } from 'lucide-react';
 
 const StatsCards = ({ stats, games }) => {
   // Calcular distribuição por plataforma
@@ -40,6 +40,9 @@ const StatsCards = ({ stats, games }) => {
     ...createPieSlice(count, platformColors[platform] || platformColors['Outro'])
   }));
 
+  // Calcular jogos platinados
+  const platinadosCount = games.filter(g => g.platinado).length;
+
   return (
     <div className="grid lg:grid-cols-5 gap-6">
       {/* Cards de estatísticas */}
@@ -74,10 +77,13 @@ const StatsCards = ({ stats, games }) => {
         </div>
 
         <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition md:col-span-2">
-          <div className="text-pink-300 text-sm mb-2 font-semibold">Horas Totais</div>
-          <div className="text-4xl font-bold text-white">{stats.totalHours}h</div>
+          <div className="text-yellow-400 text-sm mb-2 font-semibold flex items-center gap-2">
+            <Trophy className="w-5 h-5" />
+            Platinados
+          </div>
+          <div className="text-4xl font-bold text-white">{platinadosCount}</div>
           <div className="text-gray-400 text-xs mt-1">
-            {stats.totalHours >= 24 ? `${Math.floor(stats.totalHours / 24)} dias jogados` : 'Continue jogando!'}
+            {stats.total > 0 ? Math.round((platinadosCount / stats.total) * 100) : 0}% dos jogos
           </div>
         </div>
 

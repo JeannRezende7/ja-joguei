@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Calendar, Edit2, Trash2 } from 'lucide-react';
+import { Star, Calendar, Edit2, Trash2, Trophy } from 'lucide-react';
 import { STATUSES } from '../data/constants';
 
 const GameCard = ({ game, onEdit, onDelete, themeData }) => {
@@ -21,6 +21,12 @@ const GameCard = ({ game, onEdit, onDelete, themeData }) => {
               e.target.style.display = 'none';
             }}
           />
+          {game.platinado && (
+            <div className="absolute top-2 left-2 bg-yellow-500 text-black px-3 py-1 rounded-lg font-bold flex items-center gap-1 shadow-lg">
+              <Trophy className="w-4 h-4" />
+              100%
+            </div>
+          )}
           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
               onClick={(e) => {
@@ -61,6 +67,12 @@ const GameCard = ({ game, onEdit, onDelete, themeData }) => {
               {statusInfo.label}
             </span>
             <span className="bg-gray-700 px-2 py-1 rounded text-xs text-white">{game.platform}</span>
+            {game.platinado && (
+              <span className="bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                <Trophy className="w-3 h-3" />
+                Platinado
+              </span>
+            )}
           </div>
           
           <div className="flex items-center gap-1 text-yellow-400">
@@ -70,23 +82,15 @@ const GameCard = ({ game, onEdit, onDelete, themeData }) => {
             <span className="text-white ml-2 text-sm">{game.rating}/5</span>
           </div>
           
-          <div className="flex items-center justify-between text-gray-300 text-xs">
-            {game.hoursPlayed && (
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {game.hoursPlayed}h
-              </div>
-            )}
-            
-            {game.dateFinished && (
-              <div>
-                {new Date(game.dateFinished).toLocaleDateString('pt-BR', { 
-                  month: 'short', 
-                  year: 'numeric' 
-                })}
-              </div>
-            )}
-          </div>
+          {game.dateFinished && (
+            <div className="flex items-center gap-1 text-gray-300 text-xs">
+              <Calendar className="w-3 h-3" />
+              {new Date(game.dateFinished).toLocaleDateString('pt-BR', { 
+                month: 'short', 
+                year: 'numeric' 
+              })}
+            </div>
+          )}
         </div>
         
         {game.tags && game.tags.length > 0 && (

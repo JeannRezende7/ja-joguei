@@ -29,7 +29,7 @@ const JaJoguei = () => {
     rating: 5,
     status: 'completed',
     dateFinished: new Date().toISOString().split('T')[0],
-    hoursPlayed: '',
+    platinado: false,
     notes: '',
     tags: [],
     coverImage: ''
@@ -177,7 +177,7 @@ const JaJoguei = () => {
       rating: 5,
       status: 'completed',
       dateFinished: new Date().toISOString().split('T')[0],
-      hoursPlayed: '',
+      platinado: false,
       notes: '',
       tags: [],
       coverImage: ''
@@ -199,10 +199,7 @@ const JaJoguei = () => {
   const stats = calculateStats(games);
   
   const playingNow = games.filter(g => g.status === 'playing').slice(0, 3);
-  const topGames = [...games]
-    .filter(g => g.hoursPlayed)
-    .sort((a, b) => parseInt(b.hoursPlayed || 0) - parseInt(a.hoursPlayed || 0))
-    .slice(0, 10);
+  const platinadosGames = games.filter(g => g.platinado).slice(0, 10);
 
   if (authLoading) {
     return (
@@ -277,7 +274,7 @@ const JaJoguei = () => {
                     <div className="flex items-center gap-3 text-sm">
                       <span className="bg-blue-500 px-3 py-1 rounded">Jogando</span>
                       <span>{game.platform}</span>
-                      {game.hoursPlayed && <span>⏱ {game.hoursPlayed}h</span>}
+                      {game.platinado && <span className="bg-yellow-500 text-black px-2 py-1 rounded font-bold">🏆 Platinado</span>}
                     </div>
                   </div>
                 </div>
@@ -286,15 +283,15 @@ const JaJoguei = () => {
           </section>
         )}
 
-        {/* Top 10 Mais Jogados */}
-        {topGames.length > 0 && (
+        {/* Jogos Platinados */}
+        {platinadosGames.length > 0 && (
           <section>
             <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-              ⭐ Top 10 Mais Jogados
+              🏆 Jogos Platinados
             </h2>
             <div className="relative">
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
-                {topGames.map((game, index) => (
+                {platinadosGames.map((game, index) => (
                   <div
                     key={game.id}
                     className="flex-shrink-0 w-48 group cursor-pointer"
@@ -313,13 +310,13 @@ const JaJoguei = () => {
                           🎮
                         </div>
                       )}
-                      <div className="absolute top-2 left-2 bg-yellow-500 text-black font-bold w-8 h-8 rounded-full flex items-center justify-center text-lg">
-                        {index + 1}
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-black font-bold w-10 h-10 rounded-full flex items-center justify-center text-xl">
+                        🏆
                       </div>
                     </div>
                     <div className="mt-2">
                       <h4 className="text-white font-semibold truncate">{game.name}</h4>
-                      <p className="text-purple-300 text-sm">{game.hoursPlayed}h jogadas</p>
+                      <p className="text-purple-300 text-sm">100% Completo</p>
                     </div>
                   </div>
                 ))}

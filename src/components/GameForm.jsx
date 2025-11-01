@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, X, Image as ImageIcon } from 'lucide-react';
+import { Star, X, Image as ImageIcon, Trophy } from 'lucide-react';
 import { PLATFORMS, STATUSES, TAG_OPTIONS } from '../data/constants';
 
 const GameForm = ({ formData, onChange, onToggleTag }) => {
@@ -115,15 +115,21 @@ const GameForm = ({ formData, onChange, onToggleTag }) => {
           </div>
 
           <div>
-            <label className="block text-white mb-2 font-semibold">Horas Jogadas</label>
-            <input
-              type="number"
-              value={formData.hoursPlayed}
-              onChange={(e) => onChange({ ...formData, hoursPlayed: e.target.value })}
-              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none"
-              placeholder="Ex: 50"
-              min="0"
-            />
+            <label className="block text-white mb-2 font-semibold flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              Platinado / 100% Completo
+            </label>
+            <label className="flex items-center gap-3 p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:bg-slate-600 transition">
+              <input
+                type="checkbox"
+                checked={formData.platinado || false}
+                onChange={(e) => onChange({ ...formData, platinado: e.target.checked })}
+                className="w-6 h-6 accent-yellow-500 cursor-pointer"
+              />
+              <span className="text-white font-semibold">
+                {formData.platinado ? '🏆 Platinado!' : 'Marcar como platinado'}
+              </span>
+            </label>
           </div>
         </div>
 
