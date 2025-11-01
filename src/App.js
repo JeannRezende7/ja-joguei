@@ -8,10 +8,12 @@ import GameCard from './components/GameCard';
 import GameModal from './components/GameModal';
 import ExportModal from './components/ExportModal';
 import { useGameSearch } from './hooks/useGameSearch';
+import { useAuth } from './hooks/useAuth';
+import { addGame, updateGame, deleteGame, getGames, logout } from './services/firebase';
 import { detectPlatform, mapGenresToTags, calculateStats, filterGames } from './utils/gameUtils';
 
 const JaJoguei = () => {
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading } = useAuth();
   const [games, setGames] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -19,6 +21,7 @@ const JaJoguei = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPlatform, setFilterPlatform] = useState('all');
+  const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -41,39 +44,42 @@ const JaJoguei = () => {
     setShowResults
   } = useGameSearch();
 
-  // Carregar usuário salvo
+  // Carregar jogos do Firebase quando usuário logar
   useEffect(() => {
-    const savedUser = localStorage.getItem('jaJogueiUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
-
-  // Carregar jogos do usuário
-  useEffect(() => {
-    if (user) {
-      const savedGames = localStorage.getItem('jaJogueiGames');
-      if (savedGames) {
-        setGames(JSON.parse(savedGames));
+    const loadGames = async () => {
+      if (user) {
+        console.log('Carregando jogos do usuário:', user.uid);
+        setLoading(true);
+        try {
+          const userGames = await getGames(user.uid);
+          console.log('Jogos carregados:', userGames.length);
+          setGames(userGames);
+        } catch (error) {
+          console.error('Erro ao carregar jogos:', error);
+          alert('Erro ao carregar seus jogos');
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        console.log('Usuário não logado');
+        setGames([]);
       }
-    }
+    };
+
+    loadGames();
   }, [user]);
 
   const handleLogin = (newUser) => {
-    setUser(newUser);
-    localStorage.setItem('jaJogueiUser', JSON.stringify(newUser));
+    // O useAuth já gerencia o estado do usuário
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setGames([]);
-    localStorage.removeItem('jaJogueiUser');
-    localStorage.removeItem('jaJogueiGames');
-  };
-
-  const saveGames = (newGames) => {
-    setGames(newGames);
-    localStorage.setItem('jaJogueiGames', JSON.stringify(newGames));
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setGames([]);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const handleSelectGameFromAPI = (game) => {
@@ -97,40 +103,64 @@ const JaJoguei = () => {
     setShowResults(false);
   };
 
-  const handleAddGame = () => {
+  const handleAddGame = async () => {
     if (!formData.name.trim()) {
       alert('Por favor, preencha o nome do jogo');
       return;
     }
-    const newGame = {
-      ...formData,
-      id: Date.now().toString(),
-      userId: user.uid,
-      createdAt: new Date().toISOString()
-    };
-    saveGames([...games, newGame]);
-    setShowAddModal(false);
-    resetForm();
+    
+    console.log('Adicionando jogo para usuário:', user.uid);
+    setLoading(true);
+    try {
+      const newGame = await addGame(user.uid, formData);
+      console.log('Jogo adicionado com ID:', newGame.id);
+      setGames([newGame, ...games]);
+      setShowAddModal(false);
+      resetForm();
+      alert('✅ Jogo adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar jogo:', error);
+      alert('Erro ao adicionar jogo. Tente novamente');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditGame = () => {
+  const handleEditGame = async () => {
     if (!formData.name.trim()) {
       alert('Por favor, preencha o nome do jogo');
       return;
     }
-    const updatedGames = games.map(g => 
-      g.id === editingGame.id 
-        ? { ...formData, id: g.id, userId: g.userId, createdAt: g.createdAt } 
-        : g
-    );
-    saveGames(updatedGames);
-    setEditingGame(null);
-    resetForm();
+    
+    setLoading(true);
+    try {
+      await updateGame(user.uid, editingGame.id, formData);
+      const updatedGames = games.map(g => 
+        g.id === editingGame.id ? { ...formData, id: g.id } : g
+      );
+      setGames(updatedGames);
+      setEditingGame(null);
+      resetForm();
+    } catch (error) {
+      console.error('Erro ao atualizar jogo:', error);
+      alert('Erro ao atualizar jogo. Tente novamente');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteGame = (id) => {
+  const handleDeleteGame = async (id) => {
     if (window.confirm('Tem certeza que deseja deletar este jogo?')) {
-      saveGames(games.filter(g => g.id !== id));
+      setLoading(true);
+      try {
+        await deleteGame(user.uid, id);
+        setGames(games.filter(g => g.id !== id));
+      } catch (error) {
+        console.error('Erro ao deletar jogo:', error);
+        alert('Erro ao deletar jogo. Tente novamente');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -168,6 +198,14 @@ const JaJoguei = () => {
   const filteredGamesList = filterGames(games, searchTerm, filterStatus, filterPlatform);
   const stats = calculateStats(games);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-2xl">Carregando...</div>
+      </div>
+    );
+  }
+
   if (!user) {
     return <LoginScreen onLogin={handleLogin} />;
   }
@@ -194,12 +232,17 @@ const JaJoguei = () => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="mb-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg"
+          disabled={loading}
+          className="mb-6 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 shadow-lg disabled:opacity-50"
         >
-          <Plus className="w-5 h-5" /> Adicionar Jogo
+          <Plus className="w-5 h-5" /> {loading ? 'Aguarde...' : 'Adicionar Jogo'}
         </button>
 
-        {filteredGamesList.length === 0 ? (
+        {loading && !showAddModal && !editingGame ? (
+          <div className="text-center py-16">
+            <div className="text-white text-xl">Carregando jogos...</div>
+          </div>
+        ) : filteredGamesList.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-gray-400 text-xl">
               {games.length === 0 
@@ -242,12 +285,6 @@ const JaJoguei = () => {
         />
       )}
 
-      {showExportModal && (
-        <ExportModal
-          games={games}
-          onClose={() => setShowExportModal(false)}
-        />
-      )}
       {showExportModal && (
         <ExportModal
           games={games}
