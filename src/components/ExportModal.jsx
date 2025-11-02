@@ -1,27 +1,26 @@
 import React, { useState, useRef } from 'react';
 import { X, Download, Loader2 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { toPng, toJpeg } from 'html-to-image';
 import { 
-  getTopGamesByHours, 
   getTopGamesByRating, 
   getTopGamesByYear,
+  getPlatinadosGames,
   getAvailableYears,
   generateRankingHTML 
 } from '../utils/exportUtils';
 
 const ExportModal = ({ games, onClose }) => {
-  const [exportType, setExportType] = useState('hours');
+  const [exportType, setExportType] = useState('platinados');
   const [selectedYear, setSelectedYear] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const [includeImages, setIncludeImages] = useState(true);
   const previewRef = useRef(null);
 
   const availableYears = getAvailableYears(games);
 
   const getGamesForExport = () => {
     switch(exportType) {
-      case 'hours':
-        return getTopGamesByHours(games, 10);
+      case 'platinados':
+        return getPlatinadosGames(games, 10);
       case 'rating':
         return getTopGamesByRating(games, 10);
       case 'year':
@@ -33,8 +32,8 @@ const ExportModal = ({ games, onClose }) => {
 
   const getTitle = () => {
     switch(exportType) {
-      case 'hours':
-        return 'MEU TOP 10 - MAIS JOGADOS';
+      case 'platinados':
+        return 'MEU TOP 10 - PLATINADOS 🏆';
       case 'rating':
         return 'MEU TOP 10 - MELHOR AVALIADOS';
       case 'year':
@@ -44,51 +43,121 @@ const ExportModal = ({ games, onClose }) => {
     }
   };
 
+  const downloadImage = (dataUrl, filename) => {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleExport = async () => {
-    if (!previewRef.current) return;
+    if (!previewRef.current) {
+      alert('Erro: Elemento não encontrado');
+      return;
+    }
 
     setIsExporting(true);
+    const filename = `ja-joguei-top10-${exportType}${selectedYear ? '-' + selectedYear : ''}.png`;
+
     try {
+      console.log('Tentativa 1: PNG de alta qualidade...');
+      
+      // Forçar carregamento de todas as imagens primeiro
+      const images = previewRef.current.querySelectorAll('img');
+      await Promise.all(
+        Array.from(images).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve; // Continuar mesmo se imagem falhar
+            setTimeout(resolve, 3000); // Timeout de segurança
+          });
+        })
+      );
+
       const dataUrl = await toPng(previewRef.current, {
-        quality: 1.0,
+        quality: 0.95,
         pixelRatio: 2,
         backgroundColor: '#1e1b4b',
         cacheBust: true,
-        skipFonts: true,
+        skipFonts: false,
+        includeQueryParams: true,
         filter: (node) => {
-          // Ignorar elementos que podem causar problemas
-          return !node.classList?.contains('ignore-export');
+          // Não excluir nada
+          return true;
         }
       });
 
-      const link = document.createElement('a');
-      link.download = `ja-joguei-top10-${exportType}${selectedYear ? '-' + selectedYear : ''}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (error) {
-      console.error('Erro ao exportar:', error);
+      if (!dataUrl || dataUrl === 'data:,' || dataUrl.length < 100) {
+        throw new Error('Imagem vazia gerada');
+      }
+
+      downloadImage(dataUrl, filename);
+      console.log('✅ Exportação bem-sucedida!');
       
-      // Tentar novamente sem imagens externas
+    } catch (error) {
+      console.error('Erro na tentativa 1:', error);
+      
       try {
-        console.log('Tentando exportar sem carregar imagens externas...');
-        const dataUrl = await toPng(previewRef.current, {
+        console.log('Tentativa 2: JPEG com configurações alternativas...');
+        
+        const dataUrl = await toJpeg(previewRef.current, {
           quality: 0.95,
           pixelRatio: 2,
           backgroundColor: '#1e1b4b',
           cacheBust: false,
-          skipFonts: true,
-          fetchRequestInit: {
-            mode: 'no-cors',
-          }
         });
 
-        const link = document.createElement('a');
-        link.download = `ja-joguei-top10-${exportType}${selectedYear ? '-' + selectedYear : ''}.png`;
-        link.href = dataUrl;
-        link.click();
+        if (!dataUrl || dataUrl === 'data:,' || dataUrl.length < 100) {
+          throw new Error('Imagem vazia gerada');
+        }
+
+        downloadImage(dataUrl.replace('image/jpeg', 'image/png'), filename);
+        console.log('✅ Exportação bem-sucedida (método 2)!');
+        
       } catch (retryError) {
-        console.error('Erro na segunda tentativa:', retryError);
-        alert('Erro ao exportar imagem. As imagens dos jogos podem estar bloqueadas por CORS. Tente usar jogos com imagens hospedadas localmente.');
+        console.error('Erro na tentativa 2:', retryError);
+        
+        try {
+          console.log('Tentativa 3: PNG sem imagens externas...');
+          
+          // Remover temporariamente imagens externas
+          const images = previewRef.current.querySelectorAll('img');
+          const originalSrcs = [];
+          images.forEach((img, i) => {
+            originalSrcs[i] = img.src;
+            // Substituir por placeholder se for URL externa
+            if (img.src.startsWith('http') && !img.src.includes('data:')) {
+              img.style.display = 'none';
+            }
+          });
+
+          const dataUrl = await toPng(previewRef.current, {
+            quality: 0.9,
+            pixelRatio: 2,
+            backgroundColor: '#1e1b4b',
+          });
+
+          // Restaurar imagens
+          images.forEach((img, i) => {
+            img.src = originalSrcs[i];
+            img.style.display = '';
+          });
+
+          if (!dataUrl || dataUrl === 'data:,' || dataUrl.length < 100) {
+            throw new Error('Imagem vazia gerada');
+          }
+
+          downloadImage(dataUrl, filename);
+          console.log('✅ Exportação bem-sucedida (método 3 - sem imagens externas)!');
+          alert('⚠️ Exportação concluída, mas algumas imagens de capa podem não aparecer devido a restrições de CORS. O resto do ranking foi exportado com sucesso!');
+          
+        } catch (finalError) {
+          console.error('Erro na tentativa 3:', finalError);
+          alert('❌ Erro ao exportar: As imagens dos jogos podem estar bloqueadas por CORS. Tente:\n\n1. Usar jogos sem imagens de capa\n2. Hospedar as imagens em outro servidor\n3. Usar o navegador Chrome para melhor compatibilidade');
+        }
       }
     } finally {
       setIsExporting(false);
@@ -99,7 +168,7 @@ const ExportModal = ({ games, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-7xl max-h-[95vh] overflow-y-auto">
+      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-4xl max-h-[95vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">📊 Exportar Ranking</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -107,39 +176,21 @@ const ExportModal = ({ games, onClose }) => {
           </button>
         </div>
 
-        <style>{`
-          @media (max-width: 768px) {
-            .preview-container {
-              transform: scale(0.35) !important;
-            }
-          }
-          @media (min-width: 769px) and (max-width: 1024px) {
-            .preview-container {
-              transform: scale(0.6) !important;
-            }
-          }
-          @media (min-width: 1025px) {
-            .preview-container {
-              transform: scale(0.8) !important;
-            }
-          }
-        `}</style>
-
         {/* Opções de Exportação */}
         <div className="mb-6">
           <label className="block text-white mb-3 font-semibold">Escolha o tipo de ranking:</label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
-              onClick={() => setExportType('hours')}
+              onClick={() => setExportType('platinados')}
               className={`p-4 rounded-lg border-2 transition ${
-                exportType === 'hours'
-                  ? 'border-purple-500 bg-purple-600 bg-opacity-20'
-                  : 'border-gray-700 bg-gray-700 hover:border-purple-500'
+                exportType === 'platinados'
+                  ? 'border-yellow-500 bg-yellow-600 bg-opacity-20'
+                  : 'border-gray-700 bg-gray-700 hover:border-yellow-500'
               }`}
             >
-              <div className="text-2xl mb-2">⏱️</div>
-              <div className="text-white font-bold">Mais Jogados</div>
-              <div className="text-gray-400 text-sm">Por horas jogadas</div>
+              <div className="text-2xl mb-2">🏆</div>
+              <div className="text-white font-bold">Platinados</div>
+              <div className="text-gray-400 text-sm">100% completos</div>
             </button>
 
             <button
@@ -195,10 +246,9 @@ const ExportModal = ({ games, onClose }) => {
               <div className="bg-gray-900 p-4 rounded-lg overflow-auto flex justify-center">
                 <div 
                   ref={previewRef}
-                  className="preview-container"
                   style={{ 
-                    transform: 'scale(0.8)',
-                    transformOrigin: 'top center',
+                    width: '800px',
+                    maxWidth: '100%'
                   }}
                   dangerouslySetInnerHTML={{ 
                     __html: generateRankingHTML(gamesToExport, getTitle()) 
@@ -206,7 +256,10 @@ const ExportModal = ({ games, onClose }) => {
                 />
               </div>
               <p className="text-gray-400 text-sm mt-2 text-center">
-                ℹ️ A imagem exportada terá qualidade total (1200x{1200 + (gamesToExport.length * 100)}px)
+                ℹ️ A imagem será exportada em 800px de largura (otimizada para mobile e desktop)
+              </p>
+              <p className="text-yellow-400 text-xs mt-1 text-center">
+                ⚠️ Se houver problemas com CORS, algumas imagens podem não aparecer na exportação
               </p>
             </div>
 
@@ -241,6 +294,8 @@ const ExportModal = ({ games, onClose }) => {
           <div className="text-center py-8 text-gray-400">
             {exportType === 'year' && !selectedYear
               ? 'Selecione um ano para ver o preview'
+              : exportType === 'platinados' 
+              ? 'Você ainda não tem jogos platinados. Marque jogos como 100% completos para aparecerem aqui!'
               : 'Nenhum jogo encontrado para este filtro'}
           </div>
         )}

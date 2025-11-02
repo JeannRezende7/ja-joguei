@@ -1,7 +1,14 @@
-export const getTopGamesByHours = (games, limit = 10) => {
+export const getPlatinadosGames = (games, limit = 10) => {
   return [...games]
-    .filter(g => g.hoursPlayed && parseInt(g.hoursPlayed) > 0)
-    .sort((a, b) => parseInt(b.hoursPlayed) - parseInt(a.hoursPlayed))
+    .filter(g => g.platinado)
+    .sort((a, b) => {
+      // Ordenar por rating primeiro
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      // Se mesma nota, ordenar por data
+      return new Date(b.dateFinished) - new Date(a.dateFinished);
+    })
     .slice(0, limit);
 };
 
@@ -11,8 +18,8 @@ export const getTopGamesByRating = (games, limit = 10) => {
       if (b.rating !== a.rating) {
         return b.rating - a.rating;
       }
-      // Se mesma nota, ordenar por horas jogadas
-      return parseInt(b.hoursPlayed || 0) - parseInt(a.hoursPlayed || 0);
+      // Se mesma nota, ordenar por data
+      return new Date(b.dateFinished) - new Date(a.dateFinished);
     })
     .slice(0, limit);
 };
@@ -27,7 +34,7 @@ export const getGamesByYear = (games, year) => {
 
 export const getTopGamesByYear = (games, year, limit = 10) => {
   const gamesFromYear = getGamesByYear(games, year);
-  return getTopGamesByHours(gamesFromYear, limit);
+  return getTopGamesByRating(gamesFromYear, limit);
 };
 
 export const getAvailableYears = (games) => {
@@ -46,51 +53,52 @@ export const getMedalEmoji = (position) => {
   }
 };
 
-export const generateRankingHTML = (games, title, stats, includeImages = true) => {
-  const totalHours = games.reduce((acc, g) => acc + parseInt(g.hoursPlayed || 0), 0);
+export const generateRankingHTML = (games, title) => {
   const avgRating = games.length > 0 
     ? (games.reduce((acc, g) => acc + g.rating, 0) / games.length).toFixed(1)
     : 0;
+  
+  const platinadosCount = games.filter(g => g.platinado).length;
 
   return `
     <div style="
-      width: 1200px;
+      width: 800px;
       background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
-      padding: 60px;
+      padding: 40px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       color: white;
       border-radius: 20px;
       box-sizing: border-box;
     ">
       <!-- Header -->
-      <div style="text-align: center; margin-bottom: 50px;">
+      <div style="text-align: center; margin-bottom: 40px;">
         <div style="font-size: 48px; margin-bottom: 10px;">🎮</div>
-        <h1 style="font-size: 42px; margin: 0 0 10px 0; font-weight: bold;">
+        <h1 style="font-size: 36px; margin: 0 0 10px 0; font-weight: bold; line-height: 1.2;">
           ${title}
         </h1>
-        <p style="font-size: 20px; color: #a78bfa; margin: 0;">
+        <p style="font-size: 18px; color: #a78bfa; margin: 0;">
           Já Joguei - ${new Date().getFullYear()}
         </p>
       </div>
 
       <!-- Rankings -->
-      <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 40px;">
+      <div style="background: rgba(0,0,0,0.3); border-radius: 15px; padding: 30px;">
         ${games.map((game, index) => `
           <div style="
             display: flex;
             align-items: center;
-            padding: ${index < 3 ? '20px' : '15px'};
-            margin-bottom: ${index < 3 ? '20px' : '10px'};
+            padding: ${index < 3 ? '16px' : '12px'};
+            margin-bottom: ${index < 3 ? '16px' : '8px'};
             background: ${index < 3 ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255,255,255,0.05)'};
             border-radius: 12px;
             border-left: 4px solid ${index === 0 ? '#fbbf24' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#a78bfa'};
-            gap: 20px;
+            gap: 12px;
           ">
             <!-- Position -->
             <div style="
-              font-size: ${index < 3 ? '32px' : '24px'};
+              font-size: ${index < 3 ? '28px' : '20px'};
               font-weight: bold;
-              min-width: 50px;
+              min-width: 40px;
               text-align: center;
               flex-shrink: 0;
             ">
@@ -100,12 +108,13 @@ export const generateRankingHTML = (games, title, stats, includeImages = true) =
             <!-- Game Image -->
             ${game.coverImage ? `
               <div style="
-                width: ${index < 3 ? '100px' : '80px'};
-                height: ${index < 3 ? '100px' : '80px'};
+                width: ${index < 3 ? '80px' : '60px'};
+                height: ${index < 3 ? '80px' : '60px'};
                 border-radius: 8px;
                 overflow: hidden;
                 flex-shrink: 0;
                 background: rgba(0,0,0,0.3);
+                position: relative;
               ">
                 <img 
                   src="${game.coverImage}" 
@@ -116,37 +125,58 @@ export const generateRankingHTML = (games, title, stats, includeImages = true) =
                     object-fit: cover;
                   "
                 />
+                ${game.platinado ? `
+                  <div style="
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    background: #fbbf24;
+                    color: #000;
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                  ">🏆</div>
+                ` : ''}
               </div>
             ` : ''}
 
             <!-- Game Info -->
             <div style="flex: 1; min-width: 0;">
               <div style="
-                font-size: ${index < 3 ? '24px' : '18px'}; 
+                font-size: ${index < 3 ? '20px' : '16px'}; 
                 font-weight: bold; 
-                margin-bottom: 5px;
+                margin-bottom: 4px;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                white-space: nowrap;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                line-height: 1.3;
               ">
                 ${game.name}
               </div>
-              <div style="font-size: 14px; color: #d1d5db;">
-                ${game.platform} ${game.tags && game.tags.length > 0 ? '• ' + game.tags.slice(0, 2).join(', ') : ''}
+              <div style="font-size: 12px; color: #d1d5db; display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
+                <span>${game.platform}</span>
+                ${game.platinado ? '<span style="color: #fbbf24;">• 🏆 Platinado</span>' : ''}
+                ${game.tags && game.tags.length > 0 ? '<span>• ' + game.tags.slice(0, 2).join(', ') + '</span>' : ''}
               </div>
             </div>
 
-            <!-- Hours & Rating -->
+            <!-- Rating -->
             <div style="
               text-align: right; 
               flex-shrink: 0;
-              min-width: 100px;
+              min-width: 60px;
             ">
-              <div style="font-size: ${index < 3 ? '28px' : '20px'}; font-weight: bold; color: #fbbf24;">
-                ${game.hoursPlayed}h
-              </div>
-              <div style="font-size: 16px; color: #fbbf24;">
+              <div style="font-size: ${index < 3 ? '24px' : '18px'}; font-weight: bold; color: #fbbf24;">
                 ${'⭐'.repeat(game.rating)}
+              </div>
+              <div style="font-size: 12px; color: #d1d5db;">
+                ${game.rating}/5
               </div>
             </div>
           </div>
@@ -155,38 +185,49 @@ export const generateRankingHTML = (games, title, stats, includeImages = true) =
 
       <!-- Footer Stats -->
       <div style="
-        margin-top: 40px;
-        padding: 30px;
+        margin-top: 30px;
+        padding: 25px;
         background: rgba(0,0,0,0.3);
         border-radius: 15px;
-        display: flex;
-        justify-content: space-around;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
         text-align: center;
       ">
         <div>
-          <div style="font-size: 36px; font-weight: bold; color: #a78bfa;">
-            ${totalHours}h
-          </div>
-          <div style="font-size: 16px; color: #d1d5db;">
-            Total de Horas
-          </div>
-        </div>
-        <div>
-          <div style="font-size: 36px; font-weight: bold; color: #fbbf24;">
+          <div style="font-size: 32px; font-weight: bold; color: #fbbf24;">
             ${avgRating}/5
           </div>
-          <div style="font-size: 16px; color: #d1d5db;">
+          <div style="font-size: 14px; color: #d1d5db;">
             Nota Média
           </div>
         </div>
         <div>
-          <div style="font-size: 36px; font-weight: bold; color: #34d399;">
+          <div style="font-size: 32px; font-weight: bold; color: #fbbf24;">
+            ${platinadosCount}
+          </div>
+          <div style="font-size: 14px; color: #d1d5db;">
+            🏆 Platinados
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 32px; font-weight: bold; color: #34d399;">
             ${games.length}
           </div>
-          <div style="font-size: 16px; color: #d1d5db;">
+          <div style="font-size: 14px; color: #d1d5db;">
             Jogos
           </div>
         </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="
+        margin-top: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #9ca3af;
+      ">
+        Criado com Já Joguei 🎮
       </div>
     </div>
   `;
