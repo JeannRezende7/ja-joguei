@@ -2,12 +2,10 @@ export const getPlatinadosGames = (games, limit = 10) => {
   return [...games]
     .filter(g => g.platinado)
     .sort((a, b) => {
-      // Ordenar por rating primeiro
       if (b.rating !== a.rating) {
         return b.rating - a.rating;
       }
-      // Se mesma nota, ordenar por data
-      return new Date(b.dateFinished) - new Date(a.dateFinished);
+      return new Date(b.dateFinished || b.createdAt) - new Date(a.dateFinished || a.createdAt);
     })
     .slice(0, limit);
 };
@@ -18,8 +16,7 @@ export const getTopGamesByRating = (games, limit = 10) => {
       if (b.rating !== a.rating) {
         return b.rating - a.rating;
       }
-      // Se mesma nota, ordenar por data
-      return new Date(b.dateFinished) - new Date(a.dateFinished);
+      return new Date(b.dateFinished || b.createdAt) - new Date(a.dateFinished || a.createdAt);
     })
     .slice(0, limit);
 };
@@ -35,6 +32,28 @@ export const getGamesByYear = (games, year) => {
 export const getTopGamesByYear = (games, year, limit = 10) => {
   const gamesFromYear = getGamesByYear(games, year);
   return getTopGamesByRating(gamesFromYear, limit);
+};
+
+export const getRecentGames = (games, limit = 10) => {
+  return [...games]
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.dateFinished);
+      const dateB = new Date(b.createdAt || b.dateFinished);
+      return dateB - dateA;
+    })
+    .slice(0, limit);
+};
+
+export const getGamesByStatus = (games, status, limit = 10) => {
+  return [...games]
+    .filter(g => g.status === status)
+    .sort((a, b) => {
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      return new Date(b.dateFinished || b.createdAt) - new Date(a.dateFinished || a.createdAt);
+    })
+    .slice(0, limit);
 };
 
 export const getAvailableYears = (games) => {
@@ -88,7 +107,7 @@ export const generateRankingHTML = (games, title) => {
             display: flex;
             align-items: center;
             padding: ${index < 3 ? '16px' : '12px'};
-            margin-bottom: ${index < 3 ? '16px' : '8px'};
+            margin-bottom: ${index < games.length - 1 ? (index < 3 ? '16px' : '8px') : '0'};
             background: ${index < 3 ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255,255,255,0.05)'};
             border-radius: 12px;
             border-left: 4px solid ${index === 0 ? '#fbbf24' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : '#a78bfa'};
@@ -142,7 +161,21 @@ export const generateRankingHTML = (games, title) => {
                   ">🏆</div>
                 ` : ''}
               </div>
-            ` : ''}
+            ` : `
+              <div style="
+                width: ${index < 3 ? '80px' : '60px'};
+                height: ${index < 3 ? '80px' : '60px'};
+                border-radius: 8px;
+                flex-shrink: 0;
+                background: rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 32px;
+              ">
+                🎮
+              </div>
+            `}
 
             <!-- Game Info -->
             <div style="flex: 1; min-width: 0;">

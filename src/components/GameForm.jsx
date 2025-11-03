@@ -1,8 +1,12 @@
 import React from 'react';
-import { Star, X, Image as ImageIcon, Trophy } from 'lucide-react';
+import { Star, X, Image as ImageIcon, Trophy, Calendar } from 'lucide-react';
 import { PLATFORMS, STATUSES, TAG_OPTIONS } from '../data/constants';
 
 const GameForm = ({ formData, onChange, onToggleTag }) => {
+  const handleDateChange = (value) => {
+    onChange({ ...formData, dateFinished: value });
+  };
+
   return (
     <div className="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4">
       <div className="flex items-center gap-2 text-blue-300 mb-3">
@@ -105,13 +109,32 @@ const GameForm = ({ formData, onChange, onToggleTag }) => {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-white mb-2 font-semibold">Data de Finalização</label>
-            <input
-              type="date"
-              value={formData.dateFinished}
-              onChange={(e) => onChange({ ...formData, dateFinished: e.target.value })}
-              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none"
-            />
+            <label className="block text-white mb-2 font-semibold flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Data de Finalização
+            </label>
+            <div className="space-y-2">
+              <input
+                type="date"
+                value={formData.dateFinished || ''}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => handleDateChange('')}
+                className={`w-full py-2 px-3 rounded-lg text-sm transition ${
+                  formData.dateFinished === '' 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                }`}
+              >
+                🤷 Não Lembro
+              </button>
+            </div>
+            <p className="text-gray-400 text-xs mt-1">
+              Se não lembra, deixe em branco ou clique em "Não Lembro"
+            </p>
           </div>
 
           <div>
@@ -154,14 +177,20 @@ const GameForm = ({ formData, onChange, onToggleTag }) => {
         </div>
 
         <div>
-          <label className="block text-white mb-2 font-semibold">Notas/Comentários</label>
+          <label className="block text-white mb-2 font-semibold">
+            📝 Notas/Comentários
+            <span className="text-gray-400 text-sm ml-2">(opcional)</span>
+          </label>
           <textarea
-            value={formData.notes}
+            value={formData.notes || ''}
             onChange={(e) => onChange({ ...formData, notes: e.target.value })}
             className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
-            rows="3"
-            placeholder="Suas impressões sobre o jogo..."
+            rows="4"
+            placeholder="Suas impressões sobre o jogo... (opcional, mas será exibido na tela inicial)"
           />
+          <p className="text-blue-300 text-xs mt-1">
+            💡 Suas notas aparecerão nos cards dos jogos na tela inicial!
+          </p>
         </div>
       </div>
     </div>

@@ -1,13 +1,14 @@
-import React from 'react';
-import { Star, Calendar, Edit2, Trash2, Trophy } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Calendar, Edit2, Trash2, Trophy, MessageCircle } from 'lucide-react';
 import { STATUSES } from '../data/constants';
 
 const GameCard = ({ game, onEdit, onDelete, themeData }) => {
+  const [showNotes, setShowNotes] = useState(false);
   const statusInfo = STATUSES.find(s => s.value === game.status);
 
   return (
     <div 
-      className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-20 transition group"
+      className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-20 transition group flex flex-col"
       onMouseEnter={(e) => e.currentTarget.style.borderColor = themeData?.primary}
       onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}
     >
@@ -49,7 +50,7 @@ const GameCard = ({ game, onEdit, onDelete, themeData }) => {
           </div>
         </div>
       )}
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <div className="mb-3">
           <h3 
             className="text-lg font-bold text-white transition break-words mb-1 line-clamp-2"
@@ -106,6 +107,26 @@ const GameCard = ({ game, onEdit, onDelete, themeData }) => {
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Notas/Comentários */}
+        {game.notes && game.notes.trim() && (
+          <div className="mt-auto pt-2 border-t border-white border-opacity-10">
+            <button
+              onClick={() => setShowNotes(!showNotes)}
+              className="flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm transition w-full"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="font-semibold">
+                {showNotes ? 'Esconder' : 'Ver'} comentários
+              </span>
+            </button>
+            {showNotes && (
+              <div className="mt-2 p-3 bg-black bg-opacity-30 rounded-lg text-gray-200 text-sm">
+                <p className="whitespace-pre-wrap break-words">{game.notes}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
