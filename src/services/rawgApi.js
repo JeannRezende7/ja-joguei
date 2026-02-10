@@ -18,8 +18,7 @@ export const searchGames = async (query) => {
     // Se a query ficou vazia após limpar, usar a original
     const searchQuery = cleanQuery || query;
     
-    const apiUrl = `${API_BASE}/games?key=${API_KEY}&search=${encodeURIComponent(searchQuery)}&page_size=30&ordering=-relevance`;
-    const url = `${CORS_PROXY}${encodeURIComponent(apiUrl)}`;
+    const url = `/.netlify/functions/rawg-games?search=${encodeURIComponent(searchQuery)}&page_size=30&ordering=-relevance`;
     
     console.log('Buscando:', searchQuery, '(original:', query + ')');
     
