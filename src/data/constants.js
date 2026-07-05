@@ -8,10 +8,10 @@ export const PLATFORMS = [
 ];
 
 export const STATUSES = [
-  { value: 'completed', label: 'Completado', color: 'bg-green-500' },
-  { value: 'playing', label: 'Jogando', color: 'bg-blue-500' },
-  { value: 'dropped', label: 'Abandonado', color: 'bg-red-500' },
-  { value: 'backlog', label: 'Backlog', color: 'bg-gray-500' }
+  { value: 'completed', label: 'Completo', color: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' },
+  { value: 'playing', label: 'Jogando', color: 'bg-blue-500/15 text-blue-400 border border-blue-500/20' },
+  { value: 'dropped', label: 'Abandonado', color: 'bg-red-500/15 text-red-400 border border-red-500/20' },
+  { value: 'backlog', label: 'Backlog', color: 'bg-slate-500/15 text-slate-400 border border-slate-500/20' }
 ];
 
 export const TAG_OPTIONS = [

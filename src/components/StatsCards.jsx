@@ -26,12 +26,7 @@ const StatsCards = ({ stats, games }) => {
     const startAngle = currentAngle;
     currentAngle += angle;
 
-    return {
-      percentage,
-      angle,
-      startAngle,
-      color
-    };
+    return { percentage, angle, startAngle, color };
   };
 
   const pieData = Object.entries(platformDistribution).map(([platform, count]) => ({
@@ -40,73 +35,40 @@ const StatsCards = ({ stats, games }) => {
     ...createPieSlice(count, platformColors[platform] || platformColors['Outro'])
   }));
 
-  // Calcular jogos platinados
   const platinadosCount = games.filter(g => g.platinado).length;
 
+  const tiles = [
+    { label: 'Total', value: stats.total, sub: 'na biblioteca', color: 'text-white' },
+    { label: 'Completos', value: stats.completed, sub: `${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%`, color: 'text-emerald-400' },
+    { label: 'Jogando', value: stats.playing, sub: 'ativos agora', color: 'text-blue-400' },
+    { label: 'Nota média', value: stats.avgRating, sub: '/ 5', color: 'text-amber-400', icon: <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline ml-1" /> },
+    { label: 'Platinados', value: platinadosCount, sub: `${stats.total > 0 ? Math.round((platinadosCount / stats.total) * 100) : 0}%`, color: 'text-amber-400', icon: <Trophy className="w-3.5 h-3.5 inline ml-1" /> },
+    { label: 'Backlog', value: games.filter(g => g.status === 'backlog').length, sub: 'esperando', color: 'text-orange-400' },
+  ];
+
   return (
-    <div className="grid lg:grid-cols-5 gap-6">
-      {/* Cards de estatísticas */}
-      <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-          <div className="text-purple-300 text-sm mb-2 font-semibold">Total de Jogos</div>
-          <div className="text-4xl font-bold text-white">{stats.total}</div>
-          <div className="text-gray-400 text-xs mt-1">Na biblioteca</div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-          <div className="text-green-300 text-sm mb-2 font-semibold">Completados</div>
-          <div className="text-4xl font-bold text-white">{stats.completed}</div>
-          <div className="text-gray-400 text-xs mt-1">
-            {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}% do total
+    <div className="grid lg:grid-cols-5 gap-4">
+      <div className="lg:col-span-3 grid grid-cols-3 gap-3">
+        {tiles.map((tile) => (
+          <div key={tile.label} className="surface p-3">
+            <div className="text-slate-400 text-[11px] font-medium mb-1 truncate">{tile.label}</div>
+            <div className={`text-xl sm:text-2xl font-bold ${tile.color} flex items-center`}>
+              {tile.value}{tile.icon}
+            </div>
+            <div className="text-slate-500 text-[10px] mt-0.5">{tile.sub}</div>
           </div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-          <div className="text-blue-300 text-sm mb-2 font-semibold">Jogando</div>
-          <div className="text-4xl font-bold text-white">{stats.playing}</div>
-          <div className="text-gray-400 text-xs mt-1">Ativos agora</div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition">
-          <div className="text-yellow-300 text-sm mb-2 font-semibold">Nota Média</div>
-          <div className="text-4xl font-bold text-white flex items-center gap-1">
-            {stats.avgRating}
-            <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-          </div>
-          <div className="text-gray-400 text-xs mt-1">De 5 estrelas</div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition md:col-span-2">
-          <div className="text-yellow-400 text-sm mb-2 font-semibold flex items-center gap-2">
-            <Trophy className="w-5 h-5" />
-            Platinados
-          </div>
-          <div className="text-4xl font-bold text-white">{platinadosCount}</div>
-          <div className="text-gray-400 text-xs mt-1">
-            {stats.total > 0 ? Math.round((platinadosCount / stats.total) * 100) : 0}% dos jogos
-          </div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20 hover:bg-opacity-15 transition md:col-span-2">
-          <div className="text-orange-300 text-sm mb-2 font-semibold">Backlog</div>
-          <div className="text-4xl font-bold text-white">
-            {games.filter(g => g.status === 'backlog').length}
-          </div>
-          <div className="text-gray-400 text-xs mt-1">Jogos esperando</div>
-        </div>
+        ))}
       </div>
 
-      {/* Gráfico de Pizza - Distribuição por Plataforma */}
-      <div className="lg:col-span-2 bg-white bg-opacity-10 backdrop-blur-md rounded-xl p-6 border border-white border-opacity-20">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-          <Gamepad2 className="w-5 h-5" />
+      <div className="lg:col-span-2 surface p-4">
+        <h3 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm">
+          <Gamepad2 className="w-4 h-4 text-violet-400" />
           Por Plataforma
         </h3>
-        
+
         {total > 0 ? (
-          <div className="flex items-center gap-6">
-            {/* Pizza Chart */}
-            <div className="relative w-40 h-40 flex-shrink-0">
+          <div className="flex items-center gap-5">
+            <div className="relative w-24 h-24 flex-shrink-0">
               <svg viewBox="0 0 100 100" className="transform -rotate-90">
                 {pieData.map((slice, index) => {
                   const x1 = 50 + 48 * Math.cos((slice.startAngle * Math.PI) / 180);
@@ -120,33 +82,28 @@ const StatsCards = ({ stats, games }) => {
                       key={index}
                       d={`M 50 50 L ${x1} ${y1} A 48 48 0 ${largeArc} 1 ${x2} ${y2} Z`}
                       fill={slice.color}
-                      stroke="rgba(0,0,0,0.3)"
-                      strokeWidth="0.5"
-                      className="hover:opacity-80 transition-opacity"
+                      stroke="#0f172a"
+                      strokeWidth="1"
                     />
                   );
                 })}
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{total}</div>
-                  <div className="text-xs text-gray-300">jogos</div>
+                  <div className="text-lg font-bold text-white">{total}</div>
+                  <div className="text-[9px] text-slate-400">jogos</div>
                 </div>
               </div>
             </div>
 
-            {/* Legenda */}
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-1.5 min-w-0">
               {pieData.map((slice, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: slice.color }}
-                    />
-                    <span className="text-white text-xs">{slice.platform}</span>
+                <div key={index} className="flex items-center justify-between text-xs gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: slice.color }} />
+                    <span className="text-slate-300 truncate">{slice.platform}</span>
                   </div>
-                  <div className="text-gray-300 text-xs font-semibold">
+                  <div className="text-slate-500 flex-shrink-0">
                     {slice.count} ({Math.round(slice.percentage)}%)
                   </div>
                 </div>
@@ -154,7 +111,7 @@ const StatsCards = ({ stats, games }) => {
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-6 text-slate-500 text-sm">
             Adicione jogos para ver a distribuição
           </div>
         )}
